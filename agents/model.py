@@ -82,7 +82,7 @@ class MonteCarlo(MDP):
         :return: True if the number of learning iterations is bigger
                  than the specified threshold.
         """
-        return self.iteration_count > self.maturity_threshold
+        return self.iteration_count >= self.maturity_threshold
 
 
 class TemporalDifference(MDP):

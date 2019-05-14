@@ -29,4 +29,16 @@ class TestMonteCarlo(unittest.TestCase):
         self.assertEqual(mdp.value_fn[3], 0.0)
         self.assertEqual(mdp.value_fn[4], 0.25)
 
+    def test_is_mature_returns_false_if_untrained(self):
+        mdp = model.MonteCarlo(2, 0.1, 1)
+        self.assertFalse(mdp.is_mature())
+
+    def test_is_mature_returns_true_if_trained(self):
+        mdp = model.MonteCarlo(5, 0.1, 1)
+        history = ((1, 1.0), (4, 1.5), (0, 0.9))
+
+        mdp.learn(history)
+
+        self.assertTrue(mdp.is_mature())
+
     # TODO: terminate testing extreme cases for MC algorithm
