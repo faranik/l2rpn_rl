@@ -1,11 +1,11 @@
 import argparse
 
 from pypownet.environment import RunEnv
-from pypownet.runner import Runner
+from runners.runner import CustomRunner
 import agents.agent
 
 parser = argparse.ArgumentParser(description='CLI tool to run experiments using PyPowNet.')
-parser.add_argument('-a', '--agent', metavar='AGENT_CLASS', default='agent.GreedySearch', type=str,
+parser.add_argument('-a', '--agent', metavar='AGENT_CLASS', default='agent.PolicyIteration', type=str,
                     help='class to use for the agent (must be within the \'pypownet/agent.py\' file); '
                          'default class Agent')
 parser.add_argument('-n', '--niter', type=int, metavar='NUMBER_ITERATIONS', default='1000',
@@ -52,7 +52,7 @@ def main():
                     without_overflow_cutoff=args.no_overflow_cutoff)
     agent = agent_class(env)
     # Instantiate game runner and loop
-    runner = Runner(env, agent, args.render, args.verbose, args.vverbose, args.parameters, args.level, args.niter)
+    runner = CustomRunner(env, agent, args.render, args.verbose, args.vverbose, args.parameters, args.level, args.niter)
     final_reward = runner.loop(iterations=args.niter)
     print("Obtained a final reward of {}".format(final_reward))
 
