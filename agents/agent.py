@@ -1,38 +1,9 @@
 import pypownet.environment
 import pypownet.agent as agent
 import agents.model as model
+import agents.policy as policy
 
 import numpy as np
-
-
-class Policy:
-    def __init__(self):
-        """ Initialize with random values """
-
-    def get_best_action(self, state: int) -> int:
-        """
-        Get the best action for this state
-        :param state: Each bit in state variable represents the state
-                      of a line.
-        :return: Each bit in returned value is the state of a
-                 substation.
-        """
-
-    def improve(self) -> "Policy":
-        """
-        Returns another instance of Policy class which is at least
-        as good as this one.
-        :return: An instance of Policy class.
-        """
-
-    def is_mature(self) -> bool:
-        """
-        Given the improvements history, is this policy mature?
-        I.e. is this policy the optimal policy for this MDP?
-        :return: True if we believe the policy converged to the optimal
-                 policy for the MDP on which it was trained.
-        """
-        return False
 
 
 class CustomAgent(agent.Agent):
@@ -101,7 +72,7 @@ class PolicyIteration(CustomAgent):
         super().__init__(environment)
 
         self.mdp = model.MonteCarlo(environment.observation_space.number_power_lines)
-        self.policy = Policy()
+        self.policy = policy.Policy()
         self.history = list()
 
     def act(self, observation):
@@ -119,6 +90,7 @@ class PolicyIteration(CustomAgent):
     def learn(self):
         """
         Learn from the observed interaction with the environment.
+
         :return: void
         """
 

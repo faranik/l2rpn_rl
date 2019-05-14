@@ -30,14 +30,16 @@ class MDP:
 
 
 class MonteCarlo(MDP):
-    def __init__(self, state_space_size):
+    def __init__(self, state_space_size, alpha, maturity_threshold):
         """Initialize the state space."""
         super().__init__()
 
-        self.value_fn = np.zeros(state_space_size)
-        self.alpha = 0.1
+        self.value_fn = np.zeros(state_space_size, float)
+        self.alpha = alpha
         self.state_space_size = state_space_size
         self.iteration_count = 0
+        self.maturity_threshold = maturity_threshold
+
 
     def learn(self, history):
         """
@@ -80,7 +82,7 @@ class MonteCarlo(MDP):
         :return: True if the number of learning iterations is bigger
                  than the specified threshold.
         """
-        return self.iteration_count > 100000
+        return self.iteration_count > self.maturity_threshold
 
 
 class TemporalDifference(MDP):
