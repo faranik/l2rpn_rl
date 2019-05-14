@@ -1,5 +1,6 @@
 import pypownet.environment
 import pypownet.agent as agent
+import agents.model as model
 
 import numpy as np
 
@@ -30,33 +31,6 @@ class Policy:
         I.e. is this policy the optimal policy for this MDP?
         :return: True if we believe the policy converged to the optimal
                  policy for the MDP on which it was trained.
-        """
-        return False
-
-
-class MDP:
-    """
-    Interface for more specific MDP learning algorithms such as
-    (MC) Monte-Carlo Learning, (TD(0)) Temporal-Difference Learning and
-    (TD(lambda))
-    """
-
-    def __init__(self):
-        """ Initialize value function with random values """
-
-    def learn(self, history):
-        """
-        Update internal representation of value function.
-        :param history: A list of state reward tuples
-        :return: void
-        """
-
-    def is_mature(self) -> bool:
-        """
-        Given the updates history which follows a given policy,
-        is the current MDP learning mature?
-        :return: True if we believe we know well enough the value
-                 function of the current MDP
         """
         return False
 
@@ -126,7 +100,7 @@ class PolicyIteration(CustomAgent):
         assert isinstance(environment, pypownet.environment.RunEnv)
         super().__init__(environment)
 
-        self.mdp = MDP()
+        self.mdp = model.MonteCarlo(environment.observation_space.number_power_lines)
         self.policy = Policy()
         self.history = list()
 
