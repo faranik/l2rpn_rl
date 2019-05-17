@@ -2,6 +2,7 @@ import pypownet.environment
 import pypownet.agent as agent
 import agents.model as model
 import agents.policy as policy
+import agents.wrapper as wrapper
 
 import numpy as np
 
@@ -52,40 +53,55 @@ class PolicyIteration(CustomAgent):
              given the MDP and a policy.
           2. Policy Improvement - finds a new policy at least equal or
              better than the old one.
-
-    Attributes
-    ----------
-    mdp:
-    policy:
-    history:
-
-    Methods
-    -------
-    act(observation)
-    feed_reward()
-
-    learn()
     """
 
     def __init__(self, environment):
         assert isinstance(environment, pypownet.environment.RunEnv)
         super().__init__(environment)
 
-        self.mdp = model.MonteCarlo(environment.observation_space.number_power_lines)
-        self.policy = policy.Policy()
+        """List of (state, action, reward) tuples for all states visited during an episode."""
         self.history = list()
+        self.last_state = -1
+        self.last_action = -1
 
-    def act(self, observation):
+        """Learning rate. Used in Monte-Carlo action value learning."""
+        self.alpha = 0.1
+        """How many iteration to learn the action-value before policy improvement."""
+        self.mdp_iteration = 10
+        """Discount factor for total return computing."""
+        self.gamma = 0.8
+        """The probability to explore a new action instead of exploiting what we now."""
+        self.epsilon = 0.1
+
+        self.state_space_size = np.power(2, environment.observation_space.number_power_lines)
+        self.action_space_size = environment.action_space.prods_switches_subaction_length + \
+                                 environment.action_space.loads_switches_subaction_length + \
+                                 environment.action_space.lines_or_switches_subaction_length + \
+                                 environment.action_space.lines_ex_switches_subaction_length
+
+        """For this test use MonteCarlo to learn the action-value function."""
+        self.mdp = model.MonteCarlo(self.state_space_size, self.action_space_size, self.alpha, self.mdp_iteration, self.gamma)
+        """For this test use EpsilonGreedy for policy improvement."""
+        self.policy = policy.EpsilonGreedy(self.state_space_size, self.action_space_size, self.epsilon)
+
+    def act(self, observation: pypownet.environment.Observation):
+        """
+        Given the observation return an action to apply.
+
+        :param observation: The environment observations.
+        :return: Action to apply to the environment.
+        """
         observation = self.environment.observation_space.array_to_observation(observation)
-        assert isinstance(observation, pypownet.environment.Observation)
 
-        # Implement your policy here.
-        action = self.environment.action_space.get_do_nothing_action()
+        self.last_state = wrapper.observation_to_state(observation)
+        self.last_action = self.policy.get_action(self.last_state)
 
-        # Use the policy instance to get the best action for this state
-        # action = policy.get_best_action(observation)
+        do_nothing_action_array = self.environment.action_space.get_do_nothing_action()
+        do_nothing_action = self.environment.action_space.array_to_action(do_nothing_action_array)
 
-        return action
+        split_substation_action = wrapper.agents_action_to_envs_action(do_nothing_action, self.last_action)
+
+        return split_substation_action
 
     def learn(self):
         """
@@ -95,18 +111,24 @@ class PolicyIteration(CustomAgent):
         """
 
         self.mdp.learn(self.history)
+        self.history.clear()
 
         if self.mdp.is_mature():
-            self.policy.improve()
+            self.policy.improve(self.mdp.get_action_value_function())
 
-    def log_history(self, reward):
+    def log_history(self, state, action, reward):
         """
         Create a history of visited states and the obtained reward.
         Once the episode terminated, this history serves to build
         the total reward for every of visited states.
 
+        :param state: the state for which we know the immediate reward.
+        :param action: the action taken in last state.
+        :param reward: the reward obtained for the last step.
         :return: void
         """
+
+        self.history.insert(0, (state, action, reward))
 
     def feed_return(self, action, consequent_observation, rewards_list, done):
         """
@@ -119,7 +141,7 @@ class PolicyIteration(CustomAgent):
         :return:
         """
 
-        self.log_history(sum(rewards_list))
+        self.log_history(self.last_state, self.last_action, sum(rewards_list) + 5)
 
         if done:
             self.learn()

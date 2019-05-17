@@ -8,8 +8,8 @@ parser = argparse.ArgumentParser(description='CLI tool to run experiments using 
 parser.add_argument('-a', '--agent', metavar='AGENT_CLASS', default='agent.PolicyIteration', type=str,
                     help='class to use for the agent (must be within the \'pypownet/agent.py\' file); '
                          'default class Agent')
-parser.add_argument('-n', '--niter', type=int, metavar='NUMBER_ITERATIONS', default='1000',
-                    help='number of iterations to simulate (default 1000)')
+parser.add_argument('-n', '--niter', type=int, metavar='NUMBER_EPISODES', default='1000',
+                    help='number of episodes to simulate (default 1000)')
 parser.add_argument('-p', '--parameters', metavar='PARAMETERS_FOLDER', default='./parameters/default14/', type=str,
                     help='parent folder containing the parameters of the simulator to be used (folder should contain '
                          'configuration.json and reference_grid.m)')
@@ -53,8 +53,7 @@ def main():
     agent = agent_class(env)
     # Instantiate game runner and loop
     runner = CustomRunner(env, agent, args.render, args.verbose, args.vverbose, args.parameters, args.level, args.niter)
-    final_reward = runner.loop(iterations=args.niter)
-    print("Obtained a final reward of {}".format(final_reward))
+    runner.loop(iterations=200, episodes=args.niter)
 
 
 if __name__ == "__main__":

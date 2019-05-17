@@ -77,3 +77,33 @@ class CustomRunner(Runner):
         self.logger.debug('info: {}'.format(info if not info else info.text))
 
         return observation, action, reward, rewards_list, done
+
+    def loop(self, iterations, episodes=1):
+        """
+        Runs the simulator for the given number of episodes.
+
+        :param iterations: int of maximum number of iterations per episode
+        :param episodes: int of number of episodes, each resetting the environment at the beginning
+        :return:
+        """
+
+        cumulative_reward = 0.0
+        for i_episode in range(episodes):
+            cumulative_reward = 0.0
+            step = 0
+            observation = self.environment.reset()
+            while True:
+                step += 1
+                (observation, action, reward, reward_as_list, done) = self.step(observation)
+                cumulative_reward += reward + 5
+                self.logger.info("step %d - episode %d - reward: %.2f; " % (step, i_episode, reward + 5))
+                self.dump_machinelogs(step, done, reward + 5, reward_as_list, cumulative_reward,
+                                      self.environment.get_current_datetime())
+                if done:
+                    break
+
+                if step > iterations:
+                    break
+            self.logger.info("ITERATION %d - cumulative reward: %.2f" % (i_episode, cumulative_reward))
+
+        return cumulative_reward
