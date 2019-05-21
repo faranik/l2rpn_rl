@@ -158,7 +158,7 @@ class Sarsa(CustomAgent):
         assert isinstance(environment, pypownet.environment.RunEnv)
         super().__init__(environment)
 
-        """For this test use MonteCarlo to learn the action-value function."""
+        """For this test use TD(0) to learn the action-value function."""
         self.mdp = model.TemporalDifference(self.state_space_size, self.action_space_size, self.alpha,
                                             self.mdp_iteration, self.gamma)
         """For this test use EpsilonGreedy for policy improvement."""
@@ -189,5 +189,63 @@ class Sarsa(CustomAgent):
         reward_t1 = sum(rewards_as_list) + 5
 
         self.history.append((state_t, action_t, reward_t1))
+
+        self.learn()
+
+
+class QLearning(CustomAgent):
+    """
+    Implement an agent using Q-learning algorithm which is an
+    off-policy TD control algorithm. Q-learning estimates a
+    state-action value function for a target policy that
+    deterministically selects the action of highest value.
+    """
+
+    def __init__(self, environment):
+        assert isinstance(environment, pypownet.environment.RunEnv)
+        super().__init__(environment)
+
+        """For this test use TD(0) to learn the action-value function."""
+        self.mdp = model.TemporalDifference(self.state_space_size, self.action_space_size, self.alpha,
+                                            self.mdp_iteration, self.gamma)
+        """For this test use EpsilonGreedy for policy improvement."""
+        self.policy = policy.EpsilonGreedy(self.state_space_size, self.action_space_size, self.epsilon)
+
+    def feed_return(self, action, consequent_observation, rewards_as_list, done):
+        """
+        Process the obtained reward for the last applied action. For
+        the implementation of QLearning we use TD(0) learning algo.
+        QLearning follows this expression:
+
+        Q(S, A) <- Q(S, A) + alpha(R + gamma*max Q(S', A') - Q(S, A))
+
+        If if the next state S' is a terminal state then Q(S',: ) = 0
+
+        :param action:
+        :param consequent_observation:
+        :param rewards_as_list:
+        :param done:
+        :return: void
+        """
+
+        consequent_observation = self.environment.observation_space.array_to_observation(consequent_observation)
+
+        # The history follows the format (St, At, Rt1, St1, At1, Rt2, ...)
+        # Find out max Q(St1, At1)
+        state_t1 = wrapper.observation_to_state(consequent_observation)
+        action_t1 = np.argmax(self.mdp.get_action_value_function()[state_t1])
+        reward_t2 = 0
+
+        self.history.append((state_t1, action_t1, reward_t2))
+
+        state_t = self.last_state
+        action_t = self.last_action
+        reward_t1 = sum(rewards_as_list) + 5
+
+        self.history.append((state_t, action_t, reward_t1))
+
+        # If we are in terminal state set action-state values to zero
+        if done:
+            (self.mdp.get_action_value_function()[state_t1]).fill(0)
 
         self.learn()

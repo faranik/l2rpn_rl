@@ -43,7 +43,6 @@ class TestMonteCarlo(unittest.TestCase):
         history = ((1, 0, 1.0), (4, 0, 1.5), (0, 1, 0.9))
 
         mdp.learn(history)
-        mdp.learn(history)
 
         self.assertTrue(mdp.is_mature())
 
