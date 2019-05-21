@@ -5,7 +5,7 @@ from runners.runner import CustomRunner
 import agents.agent
 
 parser = argparse.ArgumentParser(description='CLI tool to run experiments using PyPowNet.')
-parser.add_argument('-a', '--agent', metavar='AGENT_CLASS', default='agent.PolicyIteration', type=str,
+parser.add_argument('-a', '--agent', metavar='AGENT_CLASS', default='agent.Sarsa', type=str,
                     help='class to use for the agent (must be within the \'pypownet/agent.py\' file); '
                          'default class Agent')
 parser.add_argument('-n', '--niter', type=int, metavar='NUMBER_EPISODES', default='1000',

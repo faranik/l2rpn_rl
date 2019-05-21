@@ -18,47 +18,6 @@ class CustomAgent(agent.Agent):
 
         super().__init__(environment)
 
-    def act(self, observation):
-        """Produces an action given an observation of the environment.
-
-        Takes as argument an observation of the current state, and returns the chosen action of class Action or np
-        array."""
-        pass
-
-    def feed_return(self, action, consequent_observation, rewards_as_list, done):
-        """
-        This function has the same purpose as the feed_reward from
-        super class. The reason of this adding is to inform the agent
-        about the end of an episode.
-        Override this method in order to learn from the reward obtained
-        from the environment after the application of the last action.
-
-        :param action: The applied action.
-        :param consequent_observation: Observation after the
-                 application of the action.
-        :param rewards_as_list: A list of rewards for the last step.
-        :param done: True if is the end of en episode. False otherwise.
-        :return: void
-        """
-        pass
-
-
-class PolicyIteration(CustomAgent):
-    """
-    An implementation of Policy Iteration algorithm for Reinforcement
-    Learning
-
-    A policy iteration algorithm implies two steps:
-          1. Policy Evaluation - finds out the value function of an MDP
-             given the MDP and a policy.
-          2. Policy Improvement - finds a new policy at least equal or
-             better than the old one.
-    """
-
-    def __init__(self, environment):
-        assert isinstance(environment, pypownet.environment.RunEnv)
-        super().__init__(environment)
-
         """List of (state, action, reward) tuples for all states visited during an episode."""
         self.history = list()
         self.last_state = -1
@@ -79,18 +38,20 @@ class PolicyIteration(CustomAgent):
                                  environment.action_space.lines_or_switches_subaction_length + \
                                  environment.action_space.lines_ex_switches_subaction_length
 
-        """For this test use MonteCarlo to learn the action-value function."""
-        self.mdp = model.MonteCarlo(self.state_space_size, self.action_space_size, self.alpha, self.mdp_iteration, self.gamma)
-        """For this test use EpsilonGreedy for policy improvement."""
-        self.policy = policy.EpsilonGreedy(self.state_space_size, self.action_space_size, self.epsilon)
+        self.mdp = None
+        self.policy = None
 
-    def act(self, observation: pypownet.environment.Observation):
+    def act(self, observation):
         """
         Given the observation return an action to apply.
 
         :param observation: The environment observations.
         :return: Action to apply to the environment.
         """
+
+        assert self.mdp is not None
+        assert self.policy is not None
+
         observation = self.environment.observation_space.array_to_observation(observation)
 
         self.last_state = wrapper.observation_to_state(observation)
@@ -115,6 +76,47 @@ class PolicyIteration(CustomAgent):
 
         if self.mdp.is_mature():
             self.policy.improve(self.mdp.get_action_value_function())
+
+    def feed_return(self, action, consequent_observation, rewards_as_list, done):
+        """
+        This function has the same purpose as the feed_reward from
+        super class. The reason of this adding is to inform the agent
+        about the end of an episode.
+        Override this method in order to learn from the reward obtained
+        from the environment after the application of the last action.
+
+        :param action: The applied action.
+        :param consequent_observation: Observation after the
+                 application of the action.
+        :param rewards_as_list: A list of rewards for the last step.
+        :param done: True if is the end of en episode. False otherwise.
+        :return: void
+        """
+
+        pass
+
+
+class PolicyIteration(CustomAgent):
+    """
+    An implementation of Policy Iteration algorithm for Reinforcement
+    Learning
+
+    A policy iteration algorithm implies two steps:
+          1. Policy Evaluation - finds out the value function of an MDP
+             given the MDP and a policy.
+          2. Policy Improvement - finds a new policy at least equal or
+             better than the old one.
+    """
+
+    def __init__(self, environment):
+        assert isinstance(environment, pypownet.environment.RunEnv)
+        super().__init__(environment)
+
+        """For this test use MonteCarlo to learn the action-value function."""
+        self.mdp = model.MonteCarlo(self.state_space_size, self.action_space_size, self.alpha, self.mdp_iteration,
+                                    self.gamma)
+        """For this test use EpsilonGreedy for policy improvement."""
+        self.policy = policy.EpsilonGreedy(self.state_space_size, self.action_space_size, self.epsilon)
 
     def log_history(self, state, action, reward):
         """
@@ -145,3 +147,47 @@ class PolicyIteration(CustomAgent):
 
         if done:
             self.learn()
+
+
+class Sarsa(CustomAgent):
+    """
+    Implement an agent using SARSA algorithm.
+    """
+
+    def __init__(self, environment):
+        assert isinstance(environment, pypownet.environment.RunEnv)
+        super().__init__(environment)
+
+        """For this test use MonteCarlo to learn the action-value function."""
+        self.mdp = model.TemporalDifference(self.state_space_size, self.action_space_size, self.alpha,
+                                            self.mdp_iteration, self.gamma)
+        """For this test use EpsilonGreedy for policy improvement."""
+        self.policy = policy.EpsilonGreedy(self.state_space_size, self.action_space_size, self.epsilon)
+
+    def feed_return(self, action, consequent_observation, rewards_as_list, done):
+        """
+        Process the obtained reward for the last applied action.
+
+        :param action:
+        :param consequent_observation:
+        :param rewards_as_list:
+        :param done:
+        :return:
+        """
+
+        consequent_observation = self.environment.observation_space.array_to_observation(consequent_observation)
+
+        # The history follows the format (St, At, Rt1, St1, At1, Rt2, ...)
+        state_t1 = wrapper.observation_to_state(consequent_observation)
+        action_t1 = self.policy.get_action(state_t1)
+        reward_t2 = 0
+
+        self.history.append((state_t1, action_t1, reward_t2))
+
+        state_t = self.last_state
+        action_t = self.last_action
+        reward_t1 = sum(rewards_as_list) + 5
+
+        self.history.append((state_t, action_t, reward_t1))
+
+        self.learn()

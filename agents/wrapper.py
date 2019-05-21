@@ -14,7 +14,7 @@ def observation_to_state(observation: pypownet.environment.Observation) -> int:
 
     assert isinstance(observation, pypownet.environment.Observation)
     lines_usage = observation.get_lines_capacity_usage()
-    binary_lines_usage = np.greater(lines_usage, 0.7)
+    binary_lines_usage = np.greater(lines_usage, 1.0)
 
     state = 0
     for bit in binary_lines_usage:
