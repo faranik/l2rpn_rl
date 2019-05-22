@@ -72,10 +72,18 @@ class MonteCarlo(MDP):
             episode with the action applied and its obtained reward.
         """
 
+        assert history is not None
+        if not history:
+            return
+
         total_rewards = np.zeros((self.state_space_size, self.action_space_size), np.float)
         cumulative_reward = 0
 
-        # Backward computing of the total reward obtained from a state
+        """
+        Backward computing of the total reward obtained from a state.
+        
+        Gt = Rt + gamma*Gt1
+        """
         for (state, action, reward) in history:
             cumulative_reward += reward + self.gamma * cumulative_reward
             total_rewards[state][action] = cumulative_reward
@@ -112,6 +120,7 @@ class TemporalDifference(MDP):
         :return void
         """
 
+        assert history is not None
         assert len(history) == 2
 
         # Remember the order of the list. The most recent event is first on the list.
