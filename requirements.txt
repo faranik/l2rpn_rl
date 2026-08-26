@@ -41,7 +41,7 @@ Keras-Preprocessing==1.0.9
 keras-rl==0.4.2
 kiwisolver==1.0.1
 lockfile==0.12.2
-Markdown==3.1
+Markdown==3.8.1
 matplotlib==2.2.2
 metakernel==0.20.14
 mock==2.0.0
